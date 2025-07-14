@@ -27,3 +27,9 @@ export default async function handler(req, res) {
       res.status(500).json({ error: err.message });
     }
   }
+  export const getServerSideProps = () => {
+    return {
+      props: {}, // prevents pre-render crash
+    };
+  };
+  
