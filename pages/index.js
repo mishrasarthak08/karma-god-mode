@@ -1,92 +1,52 @@
-import { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
-import axios from 'axios';
-
-export default function Home() {
-  const [input, setInput] = useState('');
-  const [response, setResponse] = useState('');
-  const [tasks, setTasks] = useState([]);
-  const [mode, setMode] = useState('Combat');
-  const [playing, setPlaying] = useState(false);
-  const audioRef = useRef(null);
-
-  useEffect(() => {
-    fetchTasks();
-  }, []);
-
-  const fetchTasks = async () => {
-    const { data } = await supabase.from('karma_tasks').select();
-    setTasks(data || []);
-  };
-
-  const handleKarmaAsk = async () => {
-    setResponse('Thinking...');
-    try {
-      const res = await axios.post('/api/karma', { input, mode });
-      setResponse(res.data.reply);
-      if (res.data.audioUrl) playAudio(res.data.audioUrl);
-    } catch (e) {
-      setResponse('Error: ' + e.message);
-    }
-  };
-
-  const playAudio = (url) => {
-    const audio = new Audio(url);
-    audioRef.current = audio;
-    audio.play();
-    setPlaying(true);
-    audio.onended = () => setPlaying(false);
-  };
-
-  const handleAddTask = async () => {
-    if (!input) return;
-    await supabase.from('karma_tasks').insert({ task: input });
-    fetchTasks();
-    setInput('');
-  };
-
+// pages/index.js (for Next.js) or App.js (for React)
+export default function KarmaUI() {
   return (
-    <main className="min-h-screen bg-black text-white p-6 font-mono">
-      <h1 className="text-4xl font-bold mb-4">🧠 K.A.R.M.A. — God Mode</h1>
+    <div className="min-h-screen bg-gradient-to-br from-black via-[#0e0e1a] to-gray-900 text-white font-mono p-6">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {/* HEADER */}
+        <div className="flex justify-between items-center border-b border-gray-700 pb-4">
+          <h1 className="text-4xl font-bold tracking-wide text-blue-400">K.A.R.M.A</h1>
+          <span className="text-sm text-gray-400">God Mode Enabled</span>
+        </div>
 
-      <div className="mb-4">
-        <select
-          value={mode}
-          onChange={(e) => setMode(e.target.value)}
-          className="bg-gray-800 p-2 rounded mb-2"
-        >
-          <option value="Zen">Zen 🧘</option>
-          <option value="Combat">Combat ⚔️</option>
-          <option value="Mentor">Mentor 📚</option>
-          <option value="Manager">Manager 🧾</option>
-        </select>
-        <input
-          className="w-full p-2 mb-2 text-black"
-          placeholder="Ask or add task..."
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
+        {/* MODES */}
+        <div className="flex gap-4">
+          {["Zen", "Combat", "Mentor", "Manager"].map(mode => (
+            <button
+              key={mode}
+              className="bg-gray-800 hover:bg-gray-700 px-4 py-2 rounded-lg border border-blue-500 text-blue-300 text-sm shadow-md"
+            >
+              {mode} Mode
+            </button>
+          ))}
+        </div>
+
+        {/* CHAT INTERFACE */}
+        <div className="bg-[#121222] rounded-xl p-6 shadow-inner space-y-4">
+          <div className="text-xs text-gray-400">Assistant Response</div>
+          <div className="bg-black/40 p-4 rounded-lg min-h-[100px] border border-gray-700">
+            <p className="text-blue-300">"Welcome back, Sarthak. You have 3 scheduled focus blocks today. Entering Zen Mode..."</p>
+          </div>
+        </div>
+
+        {/* INPUT BAR */}
         <div className="flex gap-2">
-          <button onClick={handleKarmaAsk} className="bg-blue-700 px-4 py-2 rounded">Ask</button>
-          <button onClick={handleAddTask} className="bg-green-700 px-4 py-2 rounded">Add Task</button>
+          <input
+            type="text"
+            placeholder="Ask Karma anything..."
+            className="flex-1 bg-black/50 border border-gray-600 rounded-xl p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm text-white"
+          />
+          <button className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-xl text-sm font-semibold shadow">
+            Send
+          </button>
+        </div>
+
+        {/* FOOTER STATUS */}
+        <div className="text-xs text-gray-500 border-t border-gray-700 pt-4 flex justify-between">
+          <span>Listening...</span>
+          <span>Connected to Supabase · v1.0</span>
         </div>
       </div>
-
-      <section className="bg-gray-900 p-4 rounded">
-        <h2 className="text-xl mb-2">🗣️ Karma Says</h2>
-        <p>{response}</p>
-      </section>
-
-      {playing && <p className="text-yellow-400 mt-2">🔊 Speaking...</p>}
-
-      <section className="mt-6">
-        <h2 className="text-xl">📋 Your Tasks</h2>
-        <ul className="list-disc ml-5">
-          {tasks.map((t) => (
-            <li key={t.id}>{t.task}</li>
-          ))}
-        </ul>
-      </section>
-    </main>
+    </div>
   );
 }
